@@ -1,13 +1,11 @@
 #!/system/bin/sh
-# action.sh for Magisk/KernelSU
-# Quick toggle action: Start/Stop nzapret service
+# action.sh for Magisk/KernelSU — Telegram-only quick toggle
 
 MODDIR=${0%/*}
 CLI="$MODDIR/system/bin/nzapret"
 
-# KernelSU/Magisk action entrypoint: keep output short and human-readable.
 print_header() {
-    echo "=== nzapret Action ==="
+    echo "=== nzapret-tg Action ==="
     echo ""
 }
 
@@ -19,24 +17,23 @@ require_cli() {
 }
 
 is_running() {
-    "$CLI" status | grep -q 'nfqws2: \[ON\]'
+    "$CLI" status | grep -q 'nztg: \[ON\]'
 }
 
-# Print the compact status lines most useful after a quick toggle action.
 print_status_summary() {
     echo ""
     echo "[*] Current Status:"
-    "$CLI" status | grep -E 'Module version:|nfqws2:|nztg:|iptables rules:|Firewall stack:|Private DNS:|list-'
+    "$CLI" status | grep -E 'Module version:|nztg:|Mode:|nfqws2:|iptables/NFQUEUE:|Host:|Port:|Cloudflare proxy:'
 }
 
 print_header
 require_cli
 
 if is_running; then
-    echo "[*] Service is currently RUNNING."
+    echo "[*] Telegram proxy is currently RUNNING."
     "$CLI" stop
 else
-    echo "[*] Service is currently STOPPED."
+    echo "[*] Telegram proxy is currently STOPPED."
     "$CLI" start
 fi
 
