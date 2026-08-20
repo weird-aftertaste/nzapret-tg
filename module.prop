@@ -1,8 +1,8 @@
 id=nzapret
-name=nzapret
-version=v3.2.0
-versionCode=12
-author=nikitos4683
-description=Android DPI-bypass utility built on nfqws2 and iptables, inspired by ideas from bol-van/zapret2.
+name=nzapret TG-only
+version=v3.2.0-tg1
+versionCode=13
+author=nikitos4683, weird-aftertaste
+description=Telegram-only Android MTProto proxy using nztg. nfqws2 and NFQUEUE traffic interception are disabled.
 webui=true
-updateJson=https://github.com/nikitos4683/nzapret/releases/latest/download/update.json
+updateJson=https://github.com/weird-aftertaste/nzapret-tg/releases/latest/download/update.json
