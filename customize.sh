@@ -1,4 +1,4 @@
-# nzapret — customize.sh
+# nzapret-tg — customize.sh
 # Magisk/KernelSU install-time customization hook.
 
 SKIPUNZIP=1
@@ -17,7 +17,6 @@ PRESERVED_TGPROXY_CONF="$MODPATH/.tgproxy.conf.install.bak"
 PRESERVED_TG_SECRET="$MODPATH/.tg-secret.install.bak"
 PRESERVED_PROFILE=""
 
-# Preserve the selected profile across module upgrades/reinstalls.
 read_preserved_profile() {
     PRESERVED_PROFILE=""
     for _profile_candidate in \
@@ -32,9 +31,6 @@ read_preserved_profile() {
     done
 }
 
-# Save the mutable personal list before unzip overwrites module files.
-# During updates, Magisk/KernelSU may install into a staging directory while the
-# previously installed module still lives under /data/adb/modules/nzapret.
 preserve_user_list() {
     rm -f "$PRESERVED_USER_LIST_FILE"
     for _list_candidate in \
@@ -49,7 +45,6 @@ preserve_user_list() {
     done
 }
 
-# Preserve the Telegram proxy config and secret across updates (best-effort).
 preserve_tgproxy_state() {
     rm -f "$PRESERVED_TGPROXY_CONF" "$PRESERVED_TG_SECRET"
     for _tc in "$TGPROXY_CONF_FILE" "$LIVE_MODULE_DIR/tgproxy.conf" "$UPDATE_MODULE_DIR/tgproxy.conf"; do
@@ -72,7 +67,6 @@ prepare_directories() {
     mkdir -p "$BIN_DIR" "$LISTS_DIR" "$PROFILE_DIR"
 }
 
-# Restore the preserved personal list, or create the shipped empty file on fresh install.
 restore_user_list() {
     if [ -f "$PRESERVED_USER_LIST_FILE" ]; then
         cat "$PRESERVED_USER_LIST_FILE" > "$USER_LIST_FILE" || abort "! Failed to restore user list"
@@ -81,38 +75,33 @@ restore_user_list() {
     rm -f "$PRESERVED_USER_LIST_FILE"
 }
 
-# Restore the previous active profile pointer if one existed.
 restore_active_profile() {
     if [ -n "$PRESERVED_PROFILE" ]; then
         printf '%s\n' "$PRESERVED_PROFILE" > "$ACTIVE_PROFILE_FILE" || abort "! Failed to restore active profile"
     fi
 }
 
-# Keep only the selected architecture binaries under their canonical runtime names.
+# TG-only build: select nztg for the current architecture and discard nfqws2.
 select_arch_binary() {
-    if [ -f "$BIN_DIR/nfqws2-$ARCH" ]; then
-        mv "$BIN_DIR/nfqws2-$ARCH" "$BIN_DIR/nfqws2"
-    else
-        abort "! Unsupported architecture: $ARCH"
-    fi
     if [ -f "$BIN_DIR/nztg-$ARCH" ]; then
         mv "$BIN_DIR/nztg-$ARCH" "$BIN_DIR/nztg"
+    else
+        abort "! Unsupported architecture for nztg: $ARCH"
     fi
 }
 
-# Strip all unused architecture binaries from the installed module tree.
 cleanup_unused_binaries() {
     for _bin_file in "$BIN_DIR"/*; do
         [ -e "$_bin_file" ] || continue
         case "$_bin_file" in
-            "$BIN_DIR/nfqws2"|"$BIN_DIR/nztg") continue ;;
+            "$BIN_DIR/nztg") continue ;;
         esac
         rm -f "$_bin_file"
     done
 }
 
 configure_permissions() {
-    ui_print "- Configuring runtime for $ARCH..."
+    ui_print "- Configuring Telegram-only runtime for $ARCH..."
     set_perm_recursive "$MODPATH" 0 0 0755 0644
     set_perm_recursive "$BIN_DIR" 0 0 0755 0755
     set_perm_recursive "$MODPATH/system/bin" 0 0 0755 0755
@@ -128,7 +117,6 @@ preserve_tgproxy_state
 ui_print "- Preparing module files..."
 unzip -oq "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" || abort "! Failed to extract module files"
 
-# Rebuild the module layout from the fresh payload, then restore mutable state.
 prepare_directories
 restore_user_list
 restore_tgproxy_state
